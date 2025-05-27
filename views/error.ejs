@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Error - Manga Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body<%= isKindle ? ' class=kindle-mode' : '' %>>
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="nav-home">📚 Home</a>
+        </nav>
+    </header>
+    
+    <main class="main">
+        <div class="error-container">
+            <h1 class="error-title">Oops! Something went wrong</h1>
+            <p class="error-message"><%= error %></p>
+            <div class="error-actions">
+                <a href="/" class="btn btn-primary">Go Home</a>
+                <button onclick="history.back()" class="btn btn-secondary">Go Back</button>
+            </div>
+        </div>
+    </main>
+</body>
+</html> 

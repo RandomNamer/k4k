@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= library.name %> - Manga Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body<%= isKindle ? ' class=kindle-mode' : '' %>>
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="nav-home">📚 Home</a>
+            <span class="nav-separator">›</span>
+            <span class="nav-current"><%= library.name %></span>
+        </nav>
+    </header>
+    
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title"><%= library.name %></h1>
+            
+            <!-- Sort Controls -->
+            <div class="sort-controls">
+                <label for="sort-select">Sort:</label>
+                <select id="sort-select" onchange="changeSortOrder()">
+                    <option value="" <%= !currentSort || currentSort === '' ? 'selected' : '' %>>Default Order</option>
+                    <option value="metadata.titleSort,asc" <%= currentSort === 'metadata.titleSort,asc' ? 'selected' : '' %>>Title A-Z</option>
+                    <option value="metadata.titleSort,desc" <%= currentSort === 'metadata.titleSort,desc' ? 'selected' : '' %>>Title Z-A</option>
+                    <option value="created,desc" <%= currentSort === 'created,desc' ? 'selected' : '' %>>Newest First</option>
+                    <option value="created,asc" <%= currentSort === 'created,asc' ? 'selected' : '' %>>Oldest First</option>
+                    <option value="lastModified,desc" <%= currentSort === 'lastModified,desc' ? 'selected' : '' %>>Recently Updated</option>
+                    <option value="booksCount,desc" <%= currentSort === 'booksCount,desc' ? 'selected' : '' %>>Most Books</option>
+                    <option value="booksCount,asc" <%= currentSort === 'booksCount,asc' ? 'selected' : '' %>>Fewest Books</option>
+                </select>
+            </div>
+        </div>
+        
+        <% if (series && series.length > 0) { %>
+            <div class="grid">
+                <% series.forEach(function(seriesItem) { %>
+                    <div class="card">
+                        <a href="/series/<%= seriesItem.id %>" class="card-link">
+                            <div class="card-content">
+                                <h3 class="card-title"><%= seriesItem.metadata.title %></h3>
+                                <p class="card-meta">
+                                    <%= seriesItem.booksCount %> books
+                                    <% if (seriesItem.booksReadCount > 0) { %>
+                                        • <%= seriesItem.booksReadCount %> read
+                                    <% } %>
+                                    <% if (seriesItem.booksInProgressCount > 0) { %>
+                                        • <%= seriesItem.booksInProgressCount %> in progress
+                                    <% } %>
+                                    <% if (seriesItem.booksMetadata && seriesItem.booksMetadata.releaseDate) { %>
+                                        <br>Released: <%= new Date(seriesItem.booksMetadata.releaseDate).getFullYear() %>
+                                    <% } %>
+                                    <% if (seriesItem.booksMetadata && seriesItem.booksMetadata.authors && seriesItem.booksMetadata.authors.length > 0) { %>
+                                        <br>By: <%= seriesItem.booksMetadata.authors.map(author => author.name).join(', ') %>
+                                    <% } %>
+                                </p>
+                                <% if (seriesItem.booksMetadata && seriesItem.booksMetadata.summary) { %>
+                                    <p class="card-summary"><%= seriesItem.booksMetadata.summary.substring(0, 150) %><%= seriesItem.booksMetadata.summary.length > 150 ? '...' : '' %></p>
+                                <% } %>
+                            </div>
+                        </a>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <p>No series found in this library.</p>
+            </div>
+        <% } %>
+    </main>
+
+    <script>
+        function changeSortOrder() {
+            const sortSelect = document.getElementById('sort-select');
+            const newSort = sortSelect.value;
+            const url = new URL(window.location);
+            
+            if (newSort === '') {
+                url.searchParams.delete('sort');
+            } else {
+                url.searchParams.set('sort', newSort);
+            }
+            
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html> 

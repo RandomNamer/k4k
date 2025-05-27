@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title><%= book.metadata.title %> - Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="reader-body<%= isKindle ? ' kindle-mode' : '' %>">
+    <div class="reader-container">
+        <!-- Top toolbar -->
+        <div class="reader-toolbar" id="toolbar">
+            <div class="toolbar-left">
+                <a href="/series/<%= book.seriesId %>" class="btn btn-back">← Back</a>
+            </div>
+            <div class="toolbar-center">
+                <div class="book-title-info">
+                    <div class="series-book-title">
+                        <%= book.seriesTitle %> · 
+                        <% if (book.metadata.number) { %>Book <%= book.metadata.number %>: <% } %><%= book.metadata.title %>
+                    </div>
+                </div>
+                <span class="page-info">
+                    <span id="current-page"><%= initialPage %></span> of <span id="total-pages"><%= totalPages %></span>
+                </span>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-menu" id="menu-btn">☰</button>
+            </div>
+        </div>
+
+        <!-- Main reading area -->
+        <div class="reader-main" id="reader-main">
+            <!-- Touch zones for navigation -->
+            <div class="touch-zone touch-zone-left" id="touch-left"></div>
+            <div class="touch-zone touch-zone-right" id="touch-right"></div>
+            
+            <!-- Page image -->
+            <div class="page-container" id="page-container">
+                <img id="current-page-img" 
+                     src="/api/books/<%= bookId %>/pages/<%= initialPage %>" 
+                     alt="Page <%= initialPage %>"
+                     class="page-image">
+                
+                <!-- Preload next page -->
+                <% if (initialPage < totalPages) { %>
+                <img id="next-page-img" 
+                     src="/api/books/<%= bookId %>/pages/<%= initialPage + 1 %>" 
+                     alt="Page <%= initialPage + 1 %>"
+                     class="page-image page-preload"
+                     style="display: none;">
+                <% } else { %>
+                <img id="next-page-img" 
+                     src="" 
+                     alt=""
+                     class="page-image page-preload"
+                     style="display: none;">
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Embedded data for JavaScript -->
+    <script type="text/javascript">
+        window.READER_DATA = {
+            bookId: '<%= bookId %>',
+            currentPage: <%= initialPage %>,
+            totalPages: <%= totalPages %>,
+            pages: <%- JSON.stringify(pages) %>,
+            book: <%- JSON.stringify(book) %>
+        };
+    </script>
+    <script src="/static/pages-app.js"></script>
+</body>
+</html> 

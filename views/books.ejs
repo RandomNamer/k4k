@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= series.metadata.title %> - Manga Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body<%= isKindle ? ' class=kindle-mode' : '' %>>
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="nav-home">📚 Home</a>
+            <span class="nav-separator">›</span>
+            <a href="/library/<%= series.libraryId %>" class="nav-link">Library</a>
+            <span class="nav-separator">›</span>
+            <span class="nav-current"><%= series.metadata.title %></span>
+        </nav>
+    </header>
+    
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title"><%= series.metadata.title %></h1>
+            
+            <!-- Sort Controls -->
+            <div class="sort-controls">
+                <label for="sort-select">Sort:</label>
+                <select id="sort-select" onchange="changeSortOrder()">
+                    <option value="metadata.numberSort,asc" <%= currentSort === 'metadata.numberSort,asc' ? 'selected' : '' %>>Chapter Number ↑</option>
+                    <option value="metadata.numberSort,desc" <%= currentSort === 'metadata.numberSort,desc' ? 'selected' : '' %>>Chapter Number ↓</option>
+                </select>
+            </div>
+        </div>
+        
+        <% if (series.metadata.summary) { %>
+            <div class="series-summary">
+                <p><%= series.metadata.summary %></p>
+            </div>
+        <% } %>
+        
+        <% if (books && books.length > 0) { %>
+            <div class="grid">
+                <% books.forEach(function(book) { %>
+                    <div class="card">
+                        <a href="/book/<%= book.id %>" class="card-link">
+                            <div class="card-content">
+                                <h3 class="card-title">
+                                    <% if (book.metadata.number) { %>
+                                        #<%= book.metadata.number %> - 
+                                    <% } %>
+                                    <%= book.metadata.title %>
+                                </h3>
+                                <p class="card-meta">
+                                    <%= book.media.pagesCount || 0 %> pages
+                                    <% if (book.metadata.releaseDate) { %>
+                                        • Released: <%= new Date(book.metadata.releaseDate).toLocaleDateString() %>
+                                    <% } %>
+                                    <% if (book.readProgress) { %>
+                                        <% if (book.readProgress.completed) { %>
+                                            <br><span class="read-progress read-completed">✓ Completed</span>
+                                        <% } else { %>
+                                            <br><span class="read-progress read-in-progress">📖 Page <%= book.readProgress.page %> of <%= book.media.pagesCount %></span>
+                                        <% } %>
+                                    <% } else { %>
+                                        <br><span class="read-progress read-unread">○ Unread</span>
+                                    <% } %>
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <p>No books found in this series.</p>
+            </div>
+        <% } %>
+    </main>
+
+    <script>
+        function changeSortOrder() {
+            const sortSelect = document.getElementById('sort-select');
+            const newSort = sortSelect.value;
+            const url = new URL(window.location);
+            url.searchParams.set('sort', newSort);
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html> 

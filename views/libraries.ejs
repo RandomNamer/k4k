@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Manga Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body<%= isKindle ? ' class=kindle-mode' : '' %>>
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="nav-home">📚 Manga Reader</a>
+        </nav>
+    </header>
+    
+    <main class="main">
+        <!-- Recently Section -->
+        <% if (keepReading.length > 0 || onDeck.length > 0) { %>
+        <section class="recently-section">
+            <h1 class="page-title">Recently</h1>
+            
+            <% if (keepReading.length > 0) { %>
+            <div class="recently-category">
+                <div class="category-header">
+                    <h2 class="category-title">Keep Reading</h2>
+                    <% if (keepReading.length >= 10) { %>
+                    <a href="/recently/keep-reading" class="view-all-link">View All</a>
+                    <% } %>
+                </div>
+                <div class="grid">
+                    <% keepReading.forEach(book => { %>
+                    <div class="card">
+                        <a href="/book/<%= book.id %>" class="card-link">
+                            <div class="card-content">
+                                <h3 class="card-title"><%= book.metadata.title %></h3>
+                                <div class="card-meta">
+                                    <div class="series-name"><%= book.seriesTitle %></div>
+                                    <% if (book.readProgress && book.readProgress.page) { %>
+                                    <div class="read-progress">Page <%= book.readProgress.page %> of <%= book.media.pagesCount %></div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+            
+            <% if (onDeck.length > 0) { %>
+            <div class="recently-category">
+                <div class="category-header">
+                    <h2 class="category-title">On Deck</h2>
+                    <% if (onDeck.length >= 10) { %>
+                    <a href="/recently/on-deck" class="view-all-link">View All</a>
+                    <% } %>
+                </div>
+                <div class="grid">
+                    <% onDeck.forEach(book => { %>
+                    <div class="card">
+                        <a href="/book/<%= book.id %>" class="card-link">
+                            <div class="card-content">
+                                <h3 class="card-title"><%= book.metadata.title %></h3>
+                                <div class="card-meta">
+                                    <div class="series-name"><%= book.seriesTitle %></div>
+                                    <div class="book-number">Book <%= book.metadata.number %></div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+        </section>
+        <% } %>
+
+        <!-- Libraries Section -->
+        <section class="libraries-section">
+            <h1 class="page-title">Libraries</h1>
+            
+            <% if (libraries && libraries.length > 0) { %>
+                <div class="grid">
+                    <% libraries.forEach(function(library) { %>
+                        <div class="card">
+                            <a href="/library/<%= library.id %>" class="card-link">
+                                <div class="card-content">
+                                    <h3 class="card-title"><%= library.name %></h3>
+                                    <p class="card-meta">
+                                        <%= library.seriesCount || 0 %> series
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <p>No libraries found. Make sure your Komga server is running and accessible.</p>
+                </div>
+            <% } %>
+        </section>
+    </main>
+</body>
+</html> 

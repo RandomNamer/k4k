@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Manga Reader</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body<%= isKindle ? ' class=kindle-mode' : '' %>>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="nav-home">Home</a>
+            <span class="nav-separator">›</span>
+            <span class="nav-current"><%= title %></span>
+        </div>
+    </div>
+
+    <div class="main">
+        <h1 class="page-title"><%= title %></h1>
+        
+        <% if (books.length === 0) { %>
+        <div class="empty-state">
+            <% if (type === 'keep-reading') { %>
+            <p>No books in progress. Start reading a book to see it here!</p>
+            <% } else if (type === 'on-deck') { %>
+            <p>No books on deck. Complete reading a book in a series to see the next book here!</p>
+            <% } else { %>
+            <p>No books found.</p>
+            <% } %>
+        </div>
+        <% } else { %>
+        <div class="grid">
+            <% books.forEach(book => { %>
+            <div class="card">
+                <a href="/book/<%= book.id %>" class="card-link">
+                    <div class="card-content">
+                        <h3 class="card-title"><%= book.metadata.title %></h3>
+                        <div class="card-meta">
+                            <div class="series-name"><%= book.seriesTitle %></div>
+                            <% if (type === 'keep-reading' && book.readProgress && book.readProgress.page) { %>
+                            <div class="read-progress">Page <%= book.readProgress.page %> of <%= book.media.pagesCount %></div>
+                            <% if (book.readProgress.readDate) { %>
+                            <div class="read-date">Last read: <%= new Date(book.readProgress.readDate).toLocaleDateString() %></div>
+                            <% } %>
+                            <% } else if (type === 'on-deck') { %>
+                            <div class="book-number">Book <%= book.metadata.number %></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <% }); %>
+        </div>
+        <% } %>
+        
+        <div class="nav-actions">
+            <a href="/" class="btn btn-secondary">← Back to Home</a>
+        </div>
+    </div>
+</body>
+</html> 
