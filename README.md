@@ -1,6 +1,6 @@
 # Komga UI for Kindle
 
-A minimal manga reader that proxies a Komga API with server-side rendering optimized for e-readers and mobile devices.
+A minimal manga reader that proxies a Komga API with server-side rendering optimized for e-readers and mobile devices. Made with Cursor within an hour.
 
 ## Features
 
