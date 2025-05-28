@@ -14,11 +14,11 @@
             <span class="nav-current"><%= library.name %></span>
         </nav>
     </header>
-    
+
     <main class="main">
         <div class="page-header">
             <h1 class="page-title"><%= library.name %></h1>
-            
+
             <!-- Sort Controls -->
             <div class="sort-controls">
                 <label for="sort-select">Sort:</label>
@@ -34,7 +34,7 @@
                 </select>
             </div>
         </div>
-        
+
         <% if (series && series.length > 0) { %>
             <div class="grid">
                 <% series.forEach(function(seriesItem) { %>
@@ -57,6 +57,45 @@
                                         <br>By: <%= seriesItem.booksMetadata.authors.map(author => author.name).join(', ') %>
                                     <% } %>
                                 </p>
+
+                                <!-- Tags and Genres -->
+                                <div class="card-badges">
+                                    <%
+                                    let badgeCount = 0;
+                                    const maxBadges = 4;
+                                    %>
+
+                                    <!-- Show genres first (from series metadata) -->
+                                    <% if (seriesItem.metadata && seriesItem.metadata.genres && seriesItem.metadata.genres.length > 0) { %>
+                                        <% seriesItem.metadata.genres.slice(0, 2).forEach(function(genre) { %>
+                                            <% if (badgeCount < maxBadges) { %>
+                                                <span class="genre-badge"><%= genre %></span>
+                                                <% badgeCount++; %>
+                                            <% } %>
+                                        <% }); %>
+                                    <% } %>
+
+                                    <!-- Show tags in remaining slots (from books metadata) -->
+                                    <% if (seriesItem.booksMetadata && seriesItem.booksMetadata.tags && seriesItem.booksMetadata.tags.length > 0) { %>
+                                        <% seriesItem.booksMetadata.tags.forEach(function(tag) { %>
+                                            <% if (badgeCount < maxBadges) { %>
+                                                <span class="tag-badge"><%= tag %></span>
+                                                <% badgeCount++; %>
+                                            <% } %>
+                                        <% }); %>
+                                    <% } %>
+
+                                    <!-- Show overflow indicator -->
+                                    <%
+                                    const totalGenres = (seriesItem.metadata && seriesItem.metadata.genres) ? seriesItem.metadata.genres.length : 0;
+                                    const totalTags = (seriesItem.booksMetadata && seriesItem.booksMetadata.tags) ? seriesItem.booksMetadata.tags.length : 0;
+                                    const totalItems = totalGenres + totalTags;
+                                    %>
+                                    <% if (totalItems > maxBadges) { %>
+                                        <span class="tag-badge tag-more">+<%= totalItems - maxBadges %></span>
+                                    <% } %>
+                                </div>
+
                                 <% if (seriesItem.booksMetadata && seriesItem.booksMetadata.summary) { %>
                                     <p class="card-summary"><%= seriesItem.booksMetadata.summary.substring(0, 150) %><%= seriesItem.booksMetadata.summary.length > 150 ? '...' : '' %></p>
                                 <% } %>
@@ -77,15 +116,15 @@
             const sortSelect = document.getElementById('sort-select');
             const newSort = sortSelect.value;
             const url = new URL(window.location);
-            
+
             if (newSort === '') {
                 url.searchParams.delete('sort');
             } else {
                 url.searchParams.set('sort', newSort);
             }
-            
+
             window.location.href = url.toString();
         }
     </script>
 </body>
-</html> 
+</html>

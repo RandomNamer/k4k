@@ -101,12 +101,12 @@ Any browser support ES5 and CSS3 will work, including:
 
 # TODO
 
-- [ ] UI tweaks including:
-   - [ ] Fix navbar button sizes
-   - [ ] Better mobile normal UI
-   - [ ] More informative series page
-   - [ ] Add tags to series card
+- [x] UI tweaks including:
+   - [x] Fix navbar button sizes
+   - [x] Better mobile normal UI
+   - [x] More informative series page
+   - [x] Add tags to series card
 
 - [ ] Filter by tags / status / author
 
-- [ ] Key event input, including Kindle page turn button
+- [x] Key event input, including Kindle page turn button

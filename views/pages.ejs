@@ -11,12 +11,12 @@
         <!-- Top toolbar -->
         <div class="reader-toolbar" id="toolbar">
             <div class="toolbar-left">
-                <a href="/series/<%= book.seriesId %>" class="btn btn-back">← Back</a>
+                <a href="/series/<%= book.seriesId %>" class="btn btn-back">←</a>
             </div>
             <div class="toolbar-center">
                 <div class="book-title-info">
                     <div class="series-book-title">
-                        <%= book.seriesTitle %> · 
+                        <%= book.seriesTitle %> ·
                         <% if (book.metadata.number) { %>Book <%= book.metadata.number %>: <% } %><%= book.metadata.title %>
                     </div>
                 </div>
@@ -34,24 +34,24 @@
             <!-- Touch zones for navigation -->
             <div class="touch-zone touch-zone-left" id="touch-left"></div>
             <div class="touch-zone touch-zone-right" id="touch-right"></div>
-            
+
             <!-- Page image -->
             <div class="page-container" id="page-container">
-                <img id="current-page-img" 
-                     src="/api/books/<%= bookId %>/pages/<%= initialPage %>" 
+                <img id="current-page-img"
+                     src="/api/books/<%= bookId %>/pages/<%= initialPage %>"
                      alt="Page <%= initialPage %>"
                      class="page-image">
-                
+
                 <!-- Preload next page -->
                 <% if (initialPage < totalPages) { %>
-                <img id="next-page-img" 
-                     src="/api/books/<%= bookId %>/pages/<%= initialPage + 1 %>" 
+                <img id="next-page-img"
+                     src="/api/books/<%= bookId %>/pages/<%= initialPage + 1 %>"
                      alt="Page <%= initialPage + 1 %>"
                      class="page-image page-preload"
                      style="display: none;">
                 <% } else { %>
-                <img id="next-page-img" 
-                     src="" 
+                <img id="next-page-img"
+                     src=""
                      alt=""
                      class="page-image page-preload"
                      style="display: none;">
@@ -77,4 +77,4 @@
     </script>
     <script src="/static/pages-app.js"></script>
 </body>
-</html> 
+</html>

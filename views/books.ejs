@@ -16,11 +16,11 @@
             <span class="nav-current"><%= series.metadata.title %></span>
         </nav>
     </header>
-    
+
     <main class="main">
         <div class="page-header">
             <h1 class="page-title"><%= series.metadata.title %></h1>
-            
+
             <!-- Sort Controls -->
             <div class="sort-controls">
                 <label for="sort-select">Sort:</label>
@@ -30,13 +30,111 @@
                 </select>
             </div>
         </div>
-        
-        <% if (series.metadata.summary) { %>
-            <div class="series-summary">
-                <p><%= series.metadata.summary %></p>
+
+        <!-- Series Metadata Section -->
+        <div class="series-metadata">
+            <div class="series-info">
+                <div class="series-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Books:</span>
+                        <span class="stat-value"><%= series.booksCount %></span>
+                    </div>
+                    <% if (series.booksReadCount > 0) { %>
+                        <div class="stat-item">
+                            <span class="stat-label">Read:</span>
+                            <span class="stat-value"><%= series.booksReadCount %></span>
+                        </div>
+                    <% } %>
+                    <% if (series.booksInProgressCount > 0) { %>
+                        <div class="stat-item">
+                            <span class="stat-label">In Progress:</span>
+                            <span class="stat-value"><%= series.booksInProgressCount %></span>
+                        </div>
+                    <% } %>
+                    <% if (series.booksUnreadCount > 0) { %>
+                        <div class="stat-item">
+                            <span class="stat-label">Unread:</span>
+                            <span class="stat-value"><%= series.booksUnreadCount %></span>
+                        </div>
+                    <% } %>
+                </div>
+
+                <div class="series-details">
+                    <% if (series.booksMetadata && series.booksMetadata.summary) { %>
+                        <div class="detail-item detail-summary">
+                            <span class="detail-label">Summary:</span>
+                            <span class="detail-value"><%= series.booksMetadata.summary %></span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.booksMetadata && series.booksMetadata.authors && series.booksMetadata.authors.length > 0) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Authors:</span>
+                            <span class="detail-value">
+                                <%= series.booksMetadata.authors.map(author => author.name + (author.role ? ' (' + author.role + ')' : '')).join(', ') %>
+                            </span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.metadata.publisher) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Publisher:</span>
+                            <span class="detail-value"><%= series.metadata.publisher %></span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.booksMetadata && series.booksMetadata.releaseDate) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Release Date:</span>
+                            <span class="detail-value"><%= new Date(series.booksMetadata.releaseDate).toLocaleDateString() %></span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.metadata.language) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Language:</span>
+                            <span class="detail-value"><%= series.metadata.language %></span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.metadata.readingDirection) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Reading Direction:</span>
+                            <span class="detail-value"><%= series.metadata.readingDirection.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) %></span>
+                        </div>
+                    <% } %>
+
+                    <% if (series.metadata.ageRating) { %>
+                        <div class="detail-item detail-compact">
+                            <span class="detail-label">Age Rating:</span>
+                            <span class="detail-value"><%= series.metadata.ageRating %>+</span>
+                        </div>
+                    <% } %>
+                </div>
+
+                <!-- Tags and Genres -->
+                <% if ((series.booksMetadata && series.booksMetadata.tags && series.booksMetadata.tags.length > 0) || (series.metadata.genres && series.metadata.genres.length > 0)) { %>
+                    <div class="series-badges">
+                        <div class="badge-group">
+                            <span class="badge-group-label">Tags & Genres:</span>
+                            <div class="badge-list">
+                                <% if (series.metadata.genres && series.metadata.genres.length > 0) { %>
+                                    <% series.metadata.genres.forEach(function(genre) { %>
+                                        <span class="genre-badge"><%= genre %></span>
+                                    <% }); %>
+                                <% } %>
+                                <% if (series.booksMetadata && series.booksMetadata.tags && series.booksMetadata.tags.length > 0) { %>
+                                    <% series.booksMetadata.tags.forEach(function(tag) { %>
+                                        <span class="tag-badge"><%= tag %></span>
+                                    <% }); %>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
             </div>
-        <% } %>
-        
+        </div>
+
         <% if (books && books.length > 0) { %>
             <div class="grid">
                 <% books.forEach(function(book) { %>
@@ -45,7 +143,7 @@
                             <div class="card-content">
                                 <h3 class="card-title">
                                     <% if (book.metadata.number) { %>
-                                        #<%= book.metadata.number %> - 
+                                        #<%= book.metadata.number %> -
                                     <% } %>
                                     <%= book.metadata.title %>
                                 </h3>
@@ -86,4 +184,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

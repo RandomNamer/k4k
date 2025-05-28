@@ -1,7 +1,7 @@
 // Manga Reader - Full-screen optimized with floating controls
 (function() {
     'use strict';
-    
+
     // Global state
     var state = {
         bookId: '',
@@ -10,9 +10,10 @@
         pages: [],
         book: {},
         isLoading: false,
-        toolbarVisible: true
+        toolbarVisible: true,
+        keySpy: true // TEMPORARY: Enable key spy for Kindle page turn detection
     };
-    
+
     // DOM elements
     var elements = {
         currentPageImg: null,
@@ -30,7 +31,7 @@
         btnMenu: null,
         readerMain: null
     };
-    
+
     // Initialize the reader
     function init() {
         // Get data from server-rendered page
@@ -41,7 +42,7 @@
             state.pages = window.READER_DATA.pages;
             state.book = window.READER_DATA.book;
         }
-        
+
         // Get existing DOM elements
         elements.currentPageImg = document.getElementById('current-page-img');
         elements.nextPageImg = document.getElementById('next-page-img');
@@ -54,28 +55,28 @@
         elements.touchZoneRight = document.getElementById('touch-right');
         elements.btnMenu = document.getElementById('menu-btn');
         elements.readerMain = document.getElementById('reader-main');
-        
+
         // Convert existing controls to floating style
         convertToFloatingControls();
-        
+
         // Create center touch zone
         createCenterTouchZone();
-        
+
         // Set up event listeners
         setupEventListeners();
-        
+
         // Optimize image for full screen
         optimizeImageDisplay();
-        
+
         // Start preloading next page
         preloadNextPage();
-        
+
         // Hide toolbar initially for full-screen experience
         hideToolbar();
-        
+
         console.log('Full-screen manga reader initialized');
     }
-    
+
     function convertToFloatingControls() {
         // Find existing back button and convert to floating
         var existingBackBtn = document.querySelector('.btn-back');
@@ -84,14 +85,14 @@
             existingBackBtn.title = 'Back to series';
             elements.btnBack = existingBackBtn;
         }
-        
+
         // Convert menu button to floating
         if (elements.btnMenu) {
             elements.btnMenu.innerHTML = '⋯';
             elements.btnMenu.title = 'Toggle controls';
         }
     }
-    
+
     function createCenterTouchZone() {
         // Create center touch zone for toggling toolbar
         elements.touchZoneCenter = document.createElement('div');
@@ -99,45 +100,52 @@
         elements.touchZoneCenter.addEventListener('click', function() {
             toggleToolbar();
         });
-        
+
         // Add to reader main
         if (elements.readerMain) {
             elements.readerMain.appendChild(elements.touchZoneCenter);
         }
     }
-    
+
     function setupEventListeners() {
+        // TEMPORARY: Key spy for Kindle page turn button detection
+        if (state.keySpy) {
+            setupKeySpy();
+        }
+
         // Touch zones for navigation
         if (elements.touchZoneLeft) {
             elements.touchZoneLeft.addEventListener('click', function() {
                 goToPreviousPage();
             });
         }
-        
+
         if (elements.touchZoneRight) {
             elements.touchZoneRight.addEventListener('click', function() {
                 goToNextPage();
             });
         }
-        
+
         // Menu button
         if (elements.btnMenu) {
             elements.btnMenu.addEventListener('click', function() {
                 toggleToolbar();
             });
         }
-        
+
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {
             var keyCode = e.keyCode || e.which;
             switch(keyCode) {
                 case 37: // Left arrow
                 case 65: // A key
+                case 33: // PageUp - Potential Kindle previous page button
                     e.preventDefault();
                     goToPreviousPage();
                     break;
                 case 39: // Right arrow
                 case 68: // D key
+                case 34: // PageDown - Kindle Oasis page turn button (confirmed working)
                     e.preventDefault();
                     goToNextPage();
                     break;
@@ -147,18 +155,68 @@
                     break;
             }
         });
-        
+
         // Prevent context menu on long press
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
-        
+
         // Handle window resize
         window.addEventListener('resize', function() {
             optimizeImageDisplay();
         });
     }
-    
+
+    // TEMPORARY: Key spy function to detect Kindle page turn buttons
+    function setupKeySpy() {
+        return; //disabled
+        console.log('🔍 Key spy activated - all key events will be logged to server console');
+
+        // Capture all key events (keydown, keyup, keypress)
+        ['keydown', 'keyup', 'keypress'].forEach(function(eventType) {
+            document.addEventListener(eventType, function(e) {
+                var keyData = {
+                    type: eventType,
+                    keyCode: e.keyCode || e.which,
+                    key: e.key || 'unknown',
+                    code: e.code || 'unknown',
+                    timestamp: Date.now(),
+                    userAgent: navigator.userAgent
+                };
+
+                // Send to server for logging (fire and forget)
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/key-spy', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify(keyData));
+
+                // Also log locally for immediate feedback
+                console.log('🔍 Key event:', keyData);
+            }, true); // Use capture phase to catch all events
+        });
+
+        // Also capture button events in case Kindle uses those
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.type === 'button') {
+                var buttonData = {
+                    type: 'button-click',
+                    target: e.target.tagName,
+                    className: e.target.className,
+                    id: e.target.id,
+                    timestamp: Date.now(),
+                    userAgent: navigator.userAgent
+                };
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/key-spy', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify(buttonData));
+
+                console.log('🔍 Button event:', buttonData);
+            }
+        });
+    }
+
     function optimizeImageDisplay() {
         // Make both images full screen
         if (elements.currentPageImg) {
@@ -169,7 +227,7 @@
             elements.currentPageImg.style.top = '0';
             elements.currentPageImg.style.left = '0';
         }
-        
+
         if (elements.nextPageImg) {
             elements.nextPageImg.style.width = '100vw';
             elements.nextPageImg.style.height = '100vh';
@@ -179,19 +237,19 @@
             elements.nextPageImg.style.left = '0';
         }
     }
-    
+
     function showLoading() {
         if (elements.loading) {
             elements.loading.style.display = 'flex';
         }
     }
-    
+
     function hideLoading() {
         if (elements.loading) {
             elements.loading.style.display = 'none';
         }
     }
-    
+
     function updatePageInfo() {
         if (elements.currentPageSpan) {
             elements.currentPageSpan.textContent = state.currentPage;
@@ -200,78 +258,78 @@
             elements.totalPagesSpan.textContent = state.totalPages;
         }
     }
-    
+
     function updateReadProgress(pageNumber) {
         // Send read progress update to Komga API
         var xhr = new XMLHttpRequest();
         xhr.open('PATCH', '/api/books/' + state.bookId + '/read-progress', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
-        
+
         // Fire and forget - don't wait for response
         xhr.send(JSON.stringify({
             page: pageNumber
         }));
-        
+
         console.log('Updated read progress to page:', pageNumber);
     }
-    
+
     function swapToNextPage() {
         if (state.currentPage >= state.totalPages || state.isLoading) {
             return;
         }
-        
+
         var nextPageNumber = state.currentPage + 1;
-        
+
         // Check if next page is already loaded in nextPageImg
-        if (elements.nextPageImg && elements.nextPageImg.src && 
+        if (elements.nextPageImg && elements.nextPageImg.src &&
             elements.nextPageImg.src.includes('/pages/' + nextPageNumber)) {
-            
+
             // Instantly swap the images - no loading time!
             var tempSrc = elements.currentPageImg.src;
             var tempAlt = elements.currentPageImg.alt;
-            
+
             elements.currentPageImg.src = elements.nextPageImg.src;
             elements.currentPageImg.alt = elements.nextPageImg.alt;
             elements.currentPageImg.style.display = 'block';
-            
+
             // Hide the next page image
             elements.nextPageImg.style.display = 'none';
-            
+
             // Update state
             state.currentPage = nextPageNumber;
             updatePageInfo();
             updateReadProgress(nextPageNumber);
-            
+
             // Preload the new next page
             preloadNextPage();
-            
+
             console.log('Swapped to page:', nextPageNumber);
         } else {
             // Fallback to loading if preload failed
             loadPageDirectly(nextPageNumber);
         }
     }
-    
+
     function swapToPreviousPage() {
         if (state.currentPage <= 1 || state.isLoading) {
             return;
         }
-        
+
         var prevPageNumber = state.currentPage - 1;
         // For previous page, we need to load directly since we only preload next
         loadPageDirectly(prevPageNumber);
     }
-    
+
     function loadPageDirectly(pageNumber) {
         if (pageNumber < 1 || pageNumber > state.totalPages || state.isLoading) {
             return;
         }
-        
+
         state.isLoading = true;
         showLoading();
-        
+
         var imageUrl = '/api/books/' + state.bookId + '/pages/' + pageNumber;
-        
+
         // Create new image to test loading
         var img = new Image();
         img.onload = function() {
@@ -281,51 +339,51 @@
                 elements.currentPageImg.style.display = 'block';
                 optimizeImageDisplay();
             }
-            
+
             state.currentPage = pageNumber;
             updatePageInfo();
             hideLoading();
             state.isLoading = false;
-            
+
             // Update read progress on Komga server
             updateReadProgress(pageNumber);
-            
+
             // Preload next page after loading current
             preloadNextPage();
         };
-        
+
         img.onerror = function() {
             console.error('Failed to load page:', pageNumber);
             hideLoading();
             state.isLoading = false;
         };
-        
+
         img.src = imageUrl;
     }
-    
+
     function preloadNextPage() {
         var nextPageNumber = state.currentPage + 1;
-        
+
         if (nextPageNumber > state.totalPages || !elements.nextPageImg) {
             return;
         }
-        
+
         var imageUrl = '/api/books/' + state.bookId + '/pages/' + nextPageNumber;
-        
+
         // Load the next page into the hidden next-page-img element
         elements.nextPageImg.onload = function() {
             console.log('Preloaded page:', nextPageNumber);
         };
-        
+
         elements.nextPageImg.onerror = function() {
             console.error('Failed to preload page:', nextPageNumber);
         };
-        
+
         elements.nextPageImg.src = imageUrl;
         elements.nextPageImg.alt = 'Page ' + nextPageNumber;
         elements.nextPageImg.style.display = 'none'; // Keep hidden until swap
     }
-    
+
     function goToNextPage() {
         if (state.currentPage < state.totalPages) {
             swapToNextPage();
@@ -334,7 +392,7 @@
             loadNextBook();
         }
     }
-    
+
     function goToPreviousPage() {
         if (state.currentPage > 1) {
             swapToPreviousPage();
@@ -343,7 +401,7 @@
             loadPreviousBook();
         }
     }
-    
+
     function loadNextBook() {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', '/api/books/' + state.bookId + '/next', true);
@@ -359,7 +417,7 @@
         };
         xhr.send();
     }
-    
+
     function loadPreviousBook() {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', '/api/books/' + state.bookId + '/previous', true);
@@ -375,21 +433,21 @@
         };
         xhr.send();
     }
-    
+
     function showToolbar() {
         if (elements.toolbar) {
             elements.toolbar.classList.remove('hidden');
             state.toolbarVisible = true;
         }
     }
-    
+
     function hideToolbar() {
         if (elements.toolbar) {
             elements.toolbar.classList.add('hidden');
             state.toolbarVisible = false;
         }
     }
-    
+
     function toggleToolbar() {
         if (state.toolbarVisible) {
             hideToolbar();
@@ -397,7 +455,7 @@
             showToolbar();
         }
     }
-    
+
     // Public API
     window.MangaReader = {
         nextPage: goToNextPage,
@@ -406,13 +464,23 @@
         toggleToolbar: toggleToolbar,
         showToolbar: showToolbar,
         hideToolbar: hideToolbar,
-        state: state
+        state: state,
+        // TEMPORARY: Key spy controls
+        enableKeySpy: function() {
+            state.keySpy = true;
+            setupKeySpy();
+            console.log('🔍 Key spy enabled');
+        },
+        disableKeySpy: function() {
+            state.keySpy = false;
+            console.log('🔍 Key spy disabled (page refresh required to fully stop)');
+        }
     };
-    
+
     // Initialize when DOM is loaded
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-})(); 
+})();

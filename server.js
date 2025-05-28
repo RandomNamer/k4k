@@ -6,6 +6,16 @@ const app = express();
 
 const KOMGA_API = config.KOMGA_API;
 const TOKEN = config.TOKEN;
+const VERBOSE_LOGS = config.VERBOSE_LOGS || false;
+
+// Unified logging function
+// isDebug: true for debug level, false for info level
+function log(message, isDebug = false) {
+  if (isDebug && !VERBOSE_LOGS) {
+    return; // Skip debug logs if verbose logging is disabled
+  }
+  console.log(message);
+}
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -17,20 +27,20 @@ app.use(express.json());
 // Kindle detection middleware
 function detectKindle(req, res, next) {
   const userAgent = req.get('User-Agent') || '';
-  
+
   // Check for Kindle device indicators
-  const isKindle = /kindle|silk/i.test(userAgent) || 
+  const isKindle = /kindle|silk/i.test(userAgent) ||
                    /mobile.*safari/i.test(userAgent) && /kindle/i.test(userAgent);
-  
+
   // Also check for e-ink specific indicators
   const isEink = /e-ink|eink|kindle|kobo|nook|boox|remarkable|supernote/i.test(userAgent);
-  
+
   // Add to response locals so it's available in all templates
   res.locals.isKindle = isKindle || isEink;
   res.locals.userAgent = userAgent;
-  
-  console.log(`Device detection: ${isKindle || isEink ? 'E-ink/Kindle' : 'Regular'} - ${userAgent}`);
-  
+
+  log(`Device detection: ${isKindle || isEink ? 'E-ink/Kindle' : 'Regular'} - ${userAgent}`, true);
+
   next();
 }
 
@@ -44,7 +54,7 @@ async function fetchKomga(endpoint, options = {}) {
     'Accept': 'application/json',
     ...options.headers
   };
-  
+
   try {
     const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
@@ -66,13 +76,13 @@ async function fetchKomgaPost(endpoint, body = {}, options = {}) {
     'Content-Type': 'application/json',
     ...options.headers
   };
-  
+
   try {
-    const response = await fetch(url, { 
+    const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      ...options 
+      ...options
     });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -92,7 +102,7 @@ async function fetchKomgaBinary(endpoint, options = {}) {
     'Accept': '*/*',
     ...options.headers
   };
-  
+
   try {
     const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
@@ -111,7 +121,7 @@ async function fetchKomgaBinary(endpoint, options = {}) {
 app.get('/', async (req, res) => {
   try {
     const libraries = await fetchKomga('/libraries');
-    
+
     // Fetch series count for each library
     const librariesWithCounts = await Promise.all(
       (libraries.content || libraries).map(async (library) => {
@@ -130,11 +140,11 @@ app.get('/', async (req, res) => {
         }
       })
     );
-    
+
     // Fetch recently data
     let keepReading = [];
     let onDeck = [];
-    
+
     try {
       // Keep Reading: books with read progress, sorted by read date desc
       // Use the same format as the official web app
@@ -153,13 +163,13 @@ app.get('/', async (req, res) => {
           ]
         }
       };
-      
+
       const keepReadingResponse = await fetchKomgaPost('/books/list?size=10&sort=readProgress.readDate,desc', keepReadingBody);
       keepReading = keepReadingResponse.content || [];
     } catch (error) {
       console.warn('Failed to fetch keep reading books:', error.message);
     }
-    
+
     try {
       // On Deck: first unread book of series with at least one book read
       const libraryIds = librariesWithCounts.map(lib => lib.id);
@@ -169,8 +179,8 @@ app.get('/', async (req, res) => {
     } catch (error) {
       console.warn('Failed to fetch on deck books:', error.message);
     }
-    
-    res.render('libraries', { 
+
+    res.render('libraries', {
       libraries: librariesWithCounts,
       keepReading,
       onDeck
@@ -185,12 +195,12 @@ app.get('/library/:libId', async (req, res) => {
   try {
     const { libId } = req.params;
     const { sort = '' } = req.query;
-    
+
     const library = await fetchKomga(`/libraries/${libId}`);
     const sortParam = sort ? `&sort=${sort}` : '';
     const series = await fetchKomga(`/series?library_id=${libId}&size=1000${sortParam}`);
-    res.render('series', { 
-      library, 
+    res.render('series', {
+      library,
       series: series.content || series,
       libId,
       currentSort: sort
@@ -205,11 +215,11 @@ app.get('/series/:seriesId', async (req, res) => {
   try {
     const { seriesId } = req.params;
     const { sort = 'metadata.numberSort,asc' } = req.query;
-    
+
     const series = await fetchKomga(`/series/${seriesId}`);
     const books = await fetchKomga(`/series/${seriesId}/books?size=1000&sort=${sort}`);
-    res.render('books', { 
-      series, 
+    res.render('books', {
+      series,
       books: books.content || books,
       seriesId,
       currentSort: sort
@@ -226,29 +236,29 @@ app.get('/book/:bookId', async (req, res) => {
     const { page } = req.query;
     const book = await fetchKomga(`/books/${bookId}`);
     const pages = await fetchKomga(`/books/${bookId}/pages`);
-    
+
     // Determine starting page based on URL parameter, read progress, or default to 1
     let initialPage = 1;
-    
+
     if (page && !isNaN(page)) {
       // URL parameter takes priority
       const requestedPage = parseInt(page);
       if (requestedPage >= 1 && requestedPage <= pages.length) {
         initialPage = requestedPage;
-        console.log(`Opening book ${bookId} at requested page ${initialPage}`);
+        log(`Opening book ${bookId} at requested page ${initialPage}`, true);
       } else {
-        console.log(`Invalid page ${requestedPage} requested, using page 1`);
+        log(`Invalid page ${requestedPage} requested, using page 1`, true);
       }
     } else if (book.readProgress && book.readProgress.page) {
       // Fall back to read progress
       initialPage = book.readProgress.page;
-      console.log(`Resuming book ${bookId} from page ${initialPage}`);
+      log(`Resuming book ${bookId} from page ${initialPage}`, true);
     } else {
-      console.log(`Starting book ${bookId} from page 1`);
+      log(`Starting book ${bookId} from page 1`, true);
     }
-    
-    res.render('pages', { 
-      book, 
+
+    res.render('pages', {
+      book,
       pages,
       bookId,
       initialPage: initialPage,
@@ -267,7 +277,7 @@ app.get('/recently/keep-reading', async (req, res) => {
     // Get all libraries first to build the condition
     const libraries = await fetchKomga('/libraries');
     const libraryIds = (libraries.content || libraries).map(lib => lib.id);
-    
+
     const keepReadingBody = {
       condition: {
         allOf: [
@@ -282,10 +292,10 @@ app.get('/recently/keep-reading', async (req, res) => {
         ]
       }
     };
-    
+
     const keepReadingResponse = await fetchKomgaPost('/books/list?size=50&sort=readProgress.readDate,desc', keepReadingBody);
     const keepReading = keepReadingResponse.content || [];
-    
+
     res.render('recently', {
       title: 'Keep Reading',
       books: keepReading,
@@ -303,10 +313,10 @@ app.get('/recently/on-deck', async (req, res) => {
     const libraries = await fetchKomga('/libraries');
     const libraryIds = (libraries.content || libraries).map(lib => lib.id);
     const libraryParams = libraryIds.map(id => `library_id=${id}`).join('&');
-    
+
     const onDeckResponse = await fetchKomga(`/books/ondeck?size=50&${libraryParams}`);
     const onDeck = onDeckResponse.content || [];
-    
+
     res.render('recently', {
       title: 'On Deck',
       books: onDeck,
@@ -324,12 +334,12 @@ app.get('/api/books/:bookId/pages/:pageNumber', async (req, res) => {
   try {
     const { bookId, pageNumber } = req.params;
     const response = await fetchKomgaBinary(`/books/${bookId}/pages/${pageNumber}`);
-    
+
     // Forward headers
     res.set('Content-Type', response.headers.get('content-type'));
     res.set('Content-Length', response.headers.get('content-length'));
     res.set('Cache-Control', 'public, max-age=3600');
-    
+
     // Pipe the image data
     response.body.pipe(res);
   } catch (error) {
@@ -353,11 +363,11 @@ app.patch('/api/books/:bookId/read-progress', async (req, res) => {
   try {
     const { bookId } = req.params;
     const { page, completed } = req.body;
-    
+
     const progressData = {};
     if (page !== undefined) progressData.page = page;
     if (completed !== undefined) progressData.completed = completed;
-    
+
     const response = await fetch(`${KOMGA_API}/books/${bookId}/read-progress`, {
       method: 'PATCH',
       headers: {
@@ -366,11 +376,11 @@ app.patch('/api/books/:bookId/read-progress', async (req, res) => {
       },
       body: JSON.stringify(progressData)
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     res.status(204).send(); // No content response like Komga API
   } catch (error) {
     console.error('Failed to update read progress:', error.message);
@@ -399,12 +409,33 @@ app.get('/api/books/:bookId/previous', async (req, res) => {
   }
 });
 
+// TEMPORARY: Key spy endpoint for Kindle page turn button detection
+app.post('/api/key-spy', async (req, res) => {
+  try {
+    const { keyCode, key, code, type, timestamp, userAgent } = req.body;
+
+    console.log('🔍 KEY SPY EVENT:', {
+      type: type,
+      keyCode: keyCode,
+      key: key,
+      code: code,
+      timestamp: new Date(timestamp).toISOString(),
+      userAgent: userAgent || 'unknown'
+    });
+
+    res.status(200).json({ logged: true });
+  } catch (error) {
+    console.error('Key spy logging error:', error);
+    res.status(500).json({ error: 'Failed to log key event' });
+  }
+});
+
 // Error handling
 app.use((req, res) => {
   // Ensure isKindle is available for 404 errors
   if (!res.locals.isKindle) {
     const userAgent = req.get('User-Agent') || '';
-    const isKindle = /kindle|silk/i.test(userAgent) || 
+    const isKindle = /kindle|silk/i.test(userAgent) ||
                      /mobile.*safari/i.test(userAgent) && /kindle/i.test(userAgent);
     const isEink = /e-ink|eink|kindle|kobo|nook|boox|remarkable|supernote/i.test(userAgent);
     res.locals.isKindle = isKindle || isEink;
@@ -417,7 +448,7 @@ app.use((err, req, res, next) => {
   // Ensure isKindle is available for 500 errors
   if (!res.locals.isKindle) {
     const userAgent = req.get('User-Agent') || '';
-    const isKindle = /kindle|silk/i.test(userAgent) || 
+    const isKindle = /kindle|silk/i.test(userAgent) ||
                      /mobile.*safari/i.test(userAgent) && /kindle/i.test(userAgent);
     const isEink = /e-ink|eink|kindle|kobo|nook|boox|remarkable|supernote/i.test(userAgent);
     res.locals.isKindle = isKindle || isEink;
@@ -427,7 +458,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || config.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Manga Reader running on http://localhost:${PORT}`);
-  console.log(`Also accessible at http://<machine-IP>:${PORT}`);
-  console.log(`Proxying Komga API: ${KOMGA_API}`);
-}); 
+  log(`Manga Reader running on http://localhost:${PORT}`);
+  log(`Also accessible at http://<machine-IP>:${PORT}`);
+  log(`Proxying Komga API: ${KOMGA_API}`);
+});
