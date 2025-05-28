@@ -1,6 +1,6 @@
 # Komga UI for Kindle
 
-A minimal manga reader that proxies a Komga API with server-side rendering optimized for e-readers and mobile devices. Made with Cursor within an hour.
+A minimal manga reader that proxies a Komga API with server-side rendering optimized for e-readers and old mobile devices. Made with Cursor within an hour.
 
 ## Features
 
@@ -63,7 +63,7 @@ The `config.js` file is gitignored to protect your credentials. Always use `conf
 
 - `GET /` → Libraries and recently section
 - `GET /library/:id` → Series in library
-- `GET /series/:id` → Books in series  
+- `GET /series/:id` → Books in series
 - `GET /book/:id` → Reading interface
 - `GET /recently/keep-reading` → Books in progress
 - `GET /recently/on-deck` → Next books to read
@@ -83,21 +83,30 @@ k4k/
 ## Tech Stack
 
 - **Backend**: Node.js, Express, EJS
-- **Frontend**: Vanilla JavaScript, CSS
-- **API**: Komga REST API proxy
+- **Frontend**: Vanilla JavaScript, XHR, CSS, HTML
 
 ## Browser Compatibility
 
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Mobile browsers (iOS Safari, Android Chrome)
-- E-readers (Kindle, Kobo browsers)
+Any browser support ES5 and CSS3 will work, including:
+
+- Kindle experiemental browser (tested on WebKit 531.2+).
+- Safari 5xx on older iOS devices.
+- Internet Explorer 11.
 
 ## Troubleshooting
 
-**Libraries not loading**: Check Komga server accessibility and API key validity  
-**Images not loading**: Verify Komga API endpoint and authentication  
+**Libraries not loading**: Check Komga server accessibility and API key validity
+**Images not loading**: Verify Komga API endpoint and authentication
 **Recently section empty**: Start reading books to populate progress data
 
-## License
+# TODO
 
-MIT License 
+- [ ] UI tweaks including:
+   - [ ] Fix navbar button sizes
+   - [ ] Better mobile normal UI
+   - [ ] More informative series page
+   - [ ] Add tags to series card
+
+- [ ] Filter by tags / status / author
+
+- [ ] Key event input, including Kindle page turn button
