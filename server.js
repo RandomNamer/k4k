@@ -99,7 +99,7 @@ async function fetchKomgaBinary(endpoint, options = {}) {
   const url = `${KOMGA_API}${endpoint}`;
   const headers = {
     'X-API-Key': TOKEN,
-    'Accept': '*/*',
+    'Accept': 'image/jpeg',
     ...options.headers
   };
 
