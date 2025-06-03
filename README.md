@@ -2,6 +2,9 @@
 
 A minimal manga reader that proxies a Komga API with server-side rendering optimized for e-readers and old mobile devices. Made with Cursor within an hour.
 
+<img width="1506" alt="image" src="https://github.com/user-attachments/assets/c0e39166-d53a-4c6f-8fc7-39d10b1466c1" />
+
+
 ## Features
 
 - **E-ink optimized** with high contrast themes and touch navigation
